@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ReviseMaster GCSE - Grade 9 iPad Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b',
+                        darkBorder: '#334155'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .perspective { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        /* Custom scrollbar for iPad smooth scrolling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Header -->
+    <header class="sticky top-0 z-40 bg-darkCard/90 backdrop-blur-md border-b border-darkBorder px-4 py-3 sm:px-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-brand-500/30">
+                    RM
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                        ReviseMaster <span class="bg-brand-500/20 text-brand-400 text-xs px-2 py-0.5 rounded-full border border-brand-500/30 font-medium">Grade 9 GCSE</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Edexcel & AQA Specialized Hub</p>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center space-x-3">
+                <button id="apiKeyBtn" onclick="toggleModal('apiModal')" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-darkBorder px-3 py-1.5 rounded-lg text-sm font-medium transition-all">
+                    <i class="fa-solid fa-key text-amber-400"></i>
+                    <span id="apiKeyStatus">Set API Key</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Sidebar: Controls & Subject Selection -->
+        <aside class="lg:col-span-4 xl:col-span-3 space-y-5">
+            
+            <!-- Subject Selector Card -->
+            <div class="bg-darkCard border border-darkBorder rounded-2xl p-4 shadow-xl">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Select Qualification & Subject</h2>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1 font-medium">Subject</label>
+                        <select id="subjectSelect" onchange="updateTopics()" class="w-full bg-darkBg border border-darkBorder text-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-brand-500 transition">
+                            <option value="maths">Edexcel Higher Maths</option>
+                            <option value="biology">AQA Triple Biology</option>
+                            <option value="chemistry">AQA Triple Chemistry</option>
+                            <option value="physics">AQA Triple Physics</option>
+                            <option value="english_lit">AQA English Literature</option>
+                            <option value="english_lang">AQA English Language</option>
+                            <option value="history">Edexcel History</option>
+                            <option value="spanish">AQA Spanish</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1 font-medium">Topic / Paper</label>
+                        <select id="topicSelect" class="w-full bg-darkBg border border-darkBorder text-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-brand-500 transition">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- YouTuber / Style Attribution -->
+                <div id="channelBadge" class="mt-4 p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/50 text-xs text-slate-300 flex items-center space-x-2">
+                    <i class="fa-brands fa-youtube text-red-500 text-base"></i>
+                    <span id="channelName" class="font-medium">Modeled after 1stClassMaths & GCSE Maths Tutor</span>
+                </div>
+            </div>
+
+            <!-- Navigation Modules -->
+            <nav class="bg-darkCard border border-darkBorder rounded-2xl p-2 space-y-1 shadow-xl">
+                <button onclick="switchTab('cards')" id="tab-cards" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition bg-brand-600 text-white shadow-md">
+                    <span class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-layer-group w-5"></i>
+                        <span>Anki x Gizmo Cards</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-xs opacity-70"></i>
+                </button>
+
+                <button onclick="switchTab('lessons')" id="tab-lessons" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition">
+                    <span class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-graduation-cap w-5"></i>
+                        <span>Step Lesson Studio</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-xs opacity-70"></i>
+                </button>
+
+                <button onclick="switchTab('maths')" id="tab-maths" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition">
+                    <span class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-calculator w-5"></i>
+                        <span>MathsGenie Solver</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-xs opacity-70"></i>
+                </button>
+
+                <button onclick="switchTab('evaluator')" id="tab-evaluator" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition">
+                    <span class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-file-signature w-5"></i>
+                        <span>Examiner Essay Marker</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-xs opacity-70"></i>
+                </button>
+            </nav>
+
+            <!-- Revision Progress Tracker -->
+            <div class="bg-darkCard border border-darkBorder rounded-2xl p-4 shadow-xl">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Session Memory Score</h3>
+                <div class="flex items-center justify-between text-sm mb-1">
+                    <span class="text-slate-300">Active Recall Mastery</span>
+                    <span id="masteryPercent" class="font-bold text-brand-400">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+                    <div id="masteryBar" class="bg-gradient-to-r from-brand-500 to-indigo-400 h-2 rounded-full w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Right Main View Canvas -->
+        <section class="lg:col-span-8 xl:col-span-9 flex flex-col space-y-6">
+
+            <!-- TAB 1: ANKI x GIZMO ACTIVE RECALL -->
+            <div id="view-cards" class="space-y-6">
+                
+                <!-- Controls Header -->
+                <div class="flex items-center justify-between bg-darkCard border border-darkBorder p-4 rounded-2xl shadow-xl">
+                    <div>
+                        <h2 class="font-bold text-lg text-white">Active Recall & Mark Scheme Testing</h2>
+                        <p class="text-xs text-slate-400">Flip card or type response to evaluate against official mark scheme keywords.</p>
+                    </div>
+                    <button onclick="generateNewCard()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 transition shadow-lg shadow-brand-600/30">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Generate Flashcard</span>
+                    </button>
+                </div>
+
+                <!-- Flashcard Stage -->
+                <div class="perspective w-full min-h-[280px]">
+                    <div id="flashcard" onclick="flipCard()" class="relative w-full min-h-[280px] bg-darkCard border border-darkBorder rounded-3xl p-6 shadow-2xl transition-transform duration-500 transform-style-3d cursor-pointer flex flex-col justify-between">
+                        
+                        <!-- Front View -->
+                        <div id="cardFront" class="w-full h-full flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="bg-slate-800 text-slate-300 text-xs px-3 py-1 rounded-full font-semibold border border-slate-700">Question / Spec Point</span>
+                                    <span class="text-xs text-slate-500"><i class="fa-solid fa-hand-pointer mr-1"></i> Tap to flip</span>
+                                </div>
+                                <h3 id="cardQuestionText" class="text-xl sm:text-2xl font-semibold text-slate-100 leading-snug">
+                                    Click "Generate Flashcard" to begin active recall testing on your selected subject and topic.
+                                </h3>
+                            </div>
+                            <div class="text-xs text-slate-500 pt-4 border-t border-slate-800">
+                                Exact criteria modeled on official exam board specifications.
+                            </div>
+                        </div>
+
+                        <!-- Back View -->
+                        <div id="cardBack" class="hidden w-full h-full flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-1 rounded-full font-semibold">Official Mark Scheme Answer</span>
+                                    <span class="text-xs text-slate-500">Key terms underlined</span>
+                                </div>
+                                <div id="cardAnswerText" class="text-slate-200 text-base leading-relaxed space-y-2">
+                                    Mark scheme keywords will appear here.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gizmo AI Answer Verification Box -->
+                <div class="bg-darkCard border border-darkBorder rounded-2xl p-5 shadow-xl space-y-3">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <i class="fa-solid fa-robot text-brand-400 mr-1.5"></i> Gizmo Mark Scheme Auto-Grader
+                    </label>
+                    <textarea id="userCardAnswer" rows="3" placeholder="Type your answer here from memory before revealing the card to check if you hit all required mark points..." class="w-full bg-darkBg border border-darkBorder rounded-xl p-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                    
+                    <div class="flex items-center justify-between">
+                        <button onclick="checkAnswerWithAI()" class="bg-slate-800 hover:bg-slate-700 text-brand-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 transition">
+                            <i class="fa-solid fa-check-double"></i>
+                            <span>Check Answer Against Official Mark Scheme</span>
+                        </button>
+
+                        <!-- Anki SM-2 Spaced Repetition Rating Buttons -->
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-slate-500 mr-1 hidden sm:inline">Anki Score:</span>
+                            <button onclick="rateCard(1)" class="px-2.5 py-1.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold hover:bg-red-500/30">Again</button>
+                            <button onclick="rateCard(3)" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold hover:bg-amber-500/30">Good</button>
+                            <button onclick="rateCard(5)" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold hover:bg-emerald-500/30">Easy</button>
+                        </div>
+                    </div>
+
+                    <!-- AI Grading Results Box -->
+                    <div id="aiEvaluationResult" class="hidden mt-4 p-4 rounded-xl bg-slate-800/90 border border-slate-700 text-sm space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: STEP LESSON STUDIO -->
+            <div id="view-lessons" class="hidden space-y-6">
+                <div class="bg-darkCard border border-darkBorder p-5 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <h2 class="font-bold text-lg text-white">YouTuber Step-by-Step Lesson Studio</h2>
+                        <p class="text-xs text-slate-400">Structured mini-lessons taught in the exact style of top GCSE YouTubers.</p>
+                    </div>
+                    <button onclick="generateLesson()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 transition shadow-lg shadow-brand-600/30">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Start Lesson</span>
+                    </button>
+                </div>
+
+                <div id="lessonContent" class="bg-darkCard border border-darkBorder rounded-2xl p-6 shadow-xl text-slate-200 min-h-[350px] leading-relaxed">
+                    <div class="text-center py-12 text-slate-500 space-y-3">
+                        <i class="fa-solid fa-book-open text-4xl text-slate-600"></i>
+                        <p>Select a topic on the left and click "Start Lesson" to generate a step-by-step masterclass.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: MATHSGENIE STEP SOLVER -->
+            <div id="view-maths" class="hidden space-y-6">
+                <div class="bg-darkCard border border-darkBorder p-5 rounded-2xl shadow-xl">
+                    <h2 class="font-bold text-lg text-white">MathsGenie Grade 7-9 Problem Solver</h2>
+                    <p class="text-xs text-slate-400">Get 1stClassMaths style step-by-step mark breakdown for complex Edexcel Higher questions.</p>
+                </div>
+
+                <div class="bg-darkCard border border-darkBorder rounded-2xl p-5 shadow-xl space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Enter Edexcel Higher Question</label>
+                        <textarea id="mathQuestionInput" rows="3" placeholder="e.g. Solve 3x² + 5x - 2 = 0 or calculate the surface area of a frustum with height 6cm..." class="w-full bg-darkBg border border-darkBorder rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                    </div>
+                    <button onclick="solveMathsQuestion()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-2 transition shadow-lg shadow-emerald-600/30">
+                        <i class="fa-solid fa-calculator"></i>
+                        <span>Generate Step-by-Step Solution</span>
+                    </button>
+
+                    <div id="mathSolutionOutput" class="hidden mt-4 p-5 rounded-xl bg-slate-800/90 border border-slate-700 text-sm leading-relaxed text-slate-200">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: EXAMINER ESSAY MARKER -->
+            <div id="view-evaluator" class="hidden space-y-6">
+                <div class="bg-darkCard border border-darkBorder p-5 rounded-2xl shadow-xl">
+                    <h2 class="font-bold text-lg text-white">Senior Examiner Essay Evaluator</h2>
+                    <p class="text-xs text-slate-400">Grade 9 feedback based on Mr Salles, Mr Everything English, and Edexcel History mark schemes.</p>
+                </div>
+
+                <div class="bg-darkCard border border-darkBorder rounded-2xl p-5 shadow-xl space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Paste Question & Essay / Answer</label>
+                        <textarea id="essayInput" rows="7" placeholder="Paste essay or answer here..." class="w-full bg-darkBg border border-darkBorder rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                    </div>
+                    <button onclick="evaluateEssay()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-2 transition shadow-lg shadow-indigo-600/30">
+                        <i class="fa-solid fa-check-to-slot"></i>
+                        <span>Evaluate Response</span>
+                    </button>
+
+                    <div id="essayEvaluationOutput" class="hidden mt-4 p-5 rounded-xl bg-slate-800/90 border border-slate-700 text-sm leading-relaxed text-slate-200">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- API Key Modal -->
+    <div id="apiModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkCard border border-darkBorder rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                    <i class="fa-solid fa-key text-amber-400"></i> Set Google Gemini API Key
+                </h3>
+                <button onclick="toggleModal('apiModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Paste your free Gemini API key from Google AI Studio. It is stored securely in your browser's local memory (<code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">localStorage</code>) and is never sent to any external server.
+            </p>
+            <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-darkBg border border-darkBorder rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 transition">
+            <div class="flex space-x-3 pt-2">
+                <button onclick="saveApiKey()" class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2.5 rounded-xl text-sm transition">Save Key</button>
+                <button onclick="toggleModal('apiModal')" class="px-4 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-700">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Subject to Topics & YouTube Channel Mapping
+        const subjectData = {
+            maths: {
+                name: "Edexcel Higher Maths",
+                channel: "1stClassMaths & The GCSE Maths Tutor",
+                topics: ["Algebra & Functions", "Geometry & Trigonometry", "Ratio & Proportion", "Probability & Statistics", "Vectors & Transformations", "Grade 8/9 Target Topics"]
+            },
+            biology: {
+                name: "AQA Triple Biology",
+                channel: "Freesciencelessons & Cognito",
+                topics: ["Cell Biology", "Organisation", "Infection & Response", "Bioenergetics", "Homeostasis & Response", "Inheritance, Variation & Evolution", "Ecology"]
+            },
+            chemistry: {
+                name: "AQA Triple Chemistry",
+                channel: "Freesciencelessons & Cognito",
+                topics: ["Atomic Structure & Periodic Table", "Bonding & Structure", "Quantitative Chemistry", "Chemical Changes", "Energy Changes", "Organic Chemistry", "Chemical Analysis"]
+            },
+            physics: {
+                name: "AQA Triple Physics",
+                channel: "Freesciencelessons & Cognito",
+                topics: ["Energy", "Electricity", "Particle Model of Matter", "Atomic Structure", "Forces", "Waves", "Magnetism & Electromagnetism", "Space Physics"]
+            },
+            english_lit: {
+                name: "AQA English Literature",
+                channel: "Mr Salles Teaches English & Mr Everything English",
+                topics: ["Macbeth (Shakespeare)", "An Inspector Calls (Priestley)", "A Christmas Carol (Dickens)", "Power & Conflict Poetry Cluster", "Unseen Poetry Analysis"]
+            },
+            english_lang: {
+                name: "AQA English Language",
+                channel: "First Rate Tutors & Mr Salles",
+                topics: ["Paper 1: Fiction Reading (Q1-Q4)", "Paper 1: Creative Writing (Q5)", "Paper 2: Non-Fiction Reading (Q1-Q4)", "Paper 2: Persuasive Writing (Q5)"]
+            },
+            history: {
+                name: "Edexcel History",
+                channel: "Mr Cloke History",
+                topics: ["Medicine in Britain (c1250-present)", "Early Elizabethan England (1558-88)", "Weimar & Nazi Germany (1918-39)", "Cold War & Superpower Relations (1941-91)"]
+            },
+            spanish: {
+                name: "AQA Spanish",
+                channel: "Seneca & Languages Online UK",
+                topics: ["Theme 1: Identity & Culture", "Theme 2: Local, National & Global Areas", "Theme 3: Current & Future Study/Employment", "Grammar & High-Yield Tenses"]
+            }
+        };
+
+        let currentCardData = null;
+        let cardFlipped = false;
+        let cardStats = { reviewed: 0, easy: 0 };
+
+        // Initialize UI
+        document.addEventListener("DOMContentLoaded", () => {
+            updateTopics();
+            checkSavedApiKey();
+        });
+
+        function updateTopics() {
+            const subjKey = document.getElementById("subjectSelect").value;
+            const data = subjectData[subjKey];
+            const topicSelect = document.getElementById("topicSelect");
+            
+            topicSelect.innerHTML = "";
+            data.topics.forEach(topic => {
+                const opt = document.createElement("option");
+                opt.value = topic;
+                opt.textContent = topic;
+                topicSelect.appendChild(opt);
+            });
+
+            document.getElementById("channelName").textContent = `Modeled after ${data.channel}`;
+        }
+
+        function switchTab(tabName) {
+            ['cards', 'lessons', 'maths', 'evaluator'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition";
+            });
+
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition bg-brand-600 text-white shadow-md";
+        }
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden');
+        }
+
+        function checkSavedApiKey() {
+            const key = localStorage.getItem("gemini_api_key");
+            const status = document.getElementById("apiKeyStatus");
+            if (key) {
+                status.textContent = "API Key Active";
+                status.className = "text-emerald-400 text-xs font-semibold";
+            } else {
+                status.textContent = "Set API Key";
+                status.className = "text-amber-400 text-xs font-semibold";
+            }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById("apiKeyInput").value.trim();
+            if (key) {
+                localStorage.setItem("gemini_api_key", key);
+                checkSavedApiKey();
+                toggleModal("apiModal");
+            }
+        }
+
+        function getApiKey() {
+            const key = localStorage.getItem("gemini_api_key");
+            if (!key) {
+                toggleModal("apiModal");
+                return null;
+            }
+            return key;
+        }
+
+        // Gemini API Call Wrapper
+        async function callGemini(promptText, isJson = false) {
+            const apiKey = getApiKey();
+            if (!apiKey) return null;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }]
+            };
+
+            if (isJson) {
+                payload.generationConfig = { response_mime_type: "application/json" };
+            }
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!res.ok) throw new Error(`API Error: ${res.status}`);
+                const data = await res.json();
+                return data.candidates[0].content.parts[0].text;
+            } catch (err) {
+                alert("Error calling Gemini API: " + err.message);
+                return null;
+            }
+        }
+
+        // Card Functions
+        function flipCard() {
+            const cardBack = document.getElementById("cardBack");
+            const cardFront = document.getElementById("cardFront");
+            
+            if (cardFlipped) {
+                cardBack.classList.add("hidden");
+                cardFront.classList.remove("hidden");
+            } else {
+                cardFront.classList.add("hidden");
+                cardBack.classList.remove("hidden");
+            }
+            cardFlipped = !cardFlipped;
+        }
+
+        async function generateNewCard() {
+            const subj = document.getElementById("subjectSelect").value;
+            const topic = document.getElementById("topicSelect").value;
+            const channel = subjectData[subj].channel;
+
+            document.getElementById("cardQuestionText").innerHTML = `<i class="fa-solid fa-spinner fa-spin text-brand-400"></i> Generating active recall card...`;
+            
+            if (cardFlipped) flipCard();
+
+            const prompt = `You are an expert exam board creator making a high-yield Anki active recall card for ${subjectData[subj].name}, topic: "${topic}".
+            Model the question style on teaching methods from ${channel}.
+            Return strictly JSON with keys: "question" and "answer" (underline key mark points using html <u> tags).`;
+
+            const response = await callGemini(prompt, true);
+            if (response) {
+                try {
+                    currentCardData = JSON.parse(response);
+                    document.getElementById("cardQuestionText").textContent = currentCardData.question;
+                    document.getElementById("cardAnswerText").innerHTML = currentCardData.answer;
+                    document.getElementById("userCardAnswer").value = "";
+                    document.getElementById("aiEvaluationResult").classList.add("hidden");
+                } catch(e) {
+                    console.error("JSON parse error", e);
+                }
+            }
+        }
+
+        async function checkAnswerWithAI() {
+            if (!currentCardData) {
+                alert("Generate a card first!");
+                return;
+            }
+
+            const userAns = document.getElementById("userCardAnswer").value.trim();
+            if (!userAns) {
+                alert("Type an answer first!");
+                return;
+            }
+
+            const evalBox = document.getElementById("aiEvaluationResult");
+            evalBox.classList.remove("hidden");
+            evalBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-brand-400"></i> Evaluating answer against mark scheme criteria...`;
+
+            const prompt = `Question: "${currentCardData.question}"
+            Official Mark Scheme: "${currentCardData.answer}"
+            Student Answer: "${userAns}"
+            
+            Evaluate if the student answer hits the mark scheme criteria.
+            Return HTML formatted text: Give a score out of 10, list missing key terms/phrases, and offer 1 tip to reach Grade 9.`;
+
+            const feedback = await callGemini(prompt);
+            if (feedback) {
+                evalBox.innerHTML = marked.parse(feedback);
+            }
+        }
+
+        function rateCard(score) {
+            cardStats.reviewed++;
+            if (score >= 3) cardStats.easy++;
+            
+            const pct = Math.round((cardStats.easy / cardStats.reviewed) * 100);
+            document.getElementById("masteryPercent").textContent = `${pct}%`;
+            document.getElementById("masteryBar").style.width = `${pct}%`;
+
+            generateNewCard();
+        }
+
+        // Lesson Generator
+        async function generateLesson() {
+            const subj = document.getElementById("subjectSelect").value;
+            const topic = document.getElementById("topicSelect").value;
+            const channel = subjectData[subj].channel;
+
+            const lessonBox = document.getElementById("lessonContent");
+            lessonBox.innerHTML = `<div class="text-center py-12"><i class="fa-solid fa-circle-notch fa-spin text-3xl text-brand-400 mb-3"></i><p>Building step-by-step masterclass lesson...</p></div>`;
+
+            const prompt = `Create a structured step-by-step revision lesson on "${topic}" for ${subjectData[subj].name}.
+            Use the exact pedagogical structure, tone, and exam tips of YouTuber(s): ${channel}.
+            Format output in clean Markdown with clear section headings:
+            1. Core Spec Knowledge & Key Concepts
+            2. Step-by-Step Breakdown
+            3. Common Examiner Traps & Grade 9 Advice`;
+
+            const res = await callGemini(prompt);
+            if (res) {
+                lessonBox.innerHTML = marked.parse(res);
+            }
+        }
+
+        // Maths Problem Solver
+        async function solveMathsQuestion() {
+            const q = document.getElementById("mathQuestionInput").value.trim();
+            if (!q) {
+                alert("Enter a maths question first!");
+                return;
+            }
+
+            const out = document.getElementById("mathSolutionOutput");
+            out.classList.remove("hidden");
+            out.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-emerald-400"></i> Solving step-by-step...`;
+
+            const prompt = `Solve this Edexcel Higher GCSE Maths question step-by-step in the style of 1stClassMaths:
+            Question: "${q}"
+            Break it down into Method Marks (M) and Accuracy Marks (A). Show clear working lines out.`;
+
+            const res = await callGemini(prompt);
+            if (res) {
+                out.innerHTML = marked.parse(res);
+            }
+        }
+
+        // Essay Evaluator
+        async function evaluateEssay() {
+            const input = document.getElementById("essayInput").value.trim();
+            if (!input) {
+                alert("Paste an essay or answer first!");
+                return;
+            }
+
+            const out = document.getElementById("essayEvaluationOutput");
+            out.classList.remove("hidden");
+            out.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> Senior Examiner analyzing answer...`;
+
+            const subj = document.getElementById("subjectSelect").value;
+
+            const prompt = `You are a Senior Examiner for ${subjectData[subj].name}.
+            Grade and evaluate the following student response:
+            "${input}"
+            
+            Provide:
+            1. Estimated Grade / Band
+            2. Strengths (AO1, AO2, AO3 analysis)
+            3. Detailed Grade 9 Improvements (what exact thesis/keywords/context to add).`;
+
+            const res = await callGemini(prompt);
+            if (res) {
+                out.innerHTML = marked.parse(res);
+            }
+        }
+    </script>
+</body>
+</html>
